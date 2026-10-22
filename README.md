@@ -265,3 +265,15 @@ Example acceptance criteria:
 ## Disclaimer
 
 This software prepares information and reminders. It is not a substitute for professional tax, legal or accounting advice. The company's management board remains responsible for all filings, payments and signatures.
+
+---
+
+## License
+
+Licensed under the PolyForm Noncommercial License 1.0.0.
+
+You may use, modify, and distribute this software for permitted
+noncommercial purposes. Commercial use requires separate permission
+from the copyright holder.
+
+See [LICENSE](./LICENSE) for the full license terms.
