@@ -1,4 +1,4 @@
-# packages/cli
+# @xolo-replacement-ou/cli
 
 The command-line interface for the OÜ business manager. This document explains how the package is organised and why. It deliberately avoids implementation detail: the goal is that anyone adding a command, a renderer or an error knows which folder to open and which rules to follow.
 
