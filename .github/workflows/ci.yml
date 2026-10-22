@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@${{ matrix.node }}
+          cache: true
+          require-lockfile: true
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+      - name: Smoke test the compiled binary
+        run: pnpm --filter @@ou-manager/cli smoke
+
+  docker:
+    name: Docker build + test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build and test in Docker
+        run: docker build --target test --tag ou-manager:test .
+
+  ci-ok:
+    name: CI OK
+    if: always()
+    needs: [check, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if any required job failed or was cancelled
+        run: |
+          echo "check:  ${{ needs.check.result }}"
+          echo "docker: ${{ needs.docker.result }}"
+          [ "${{ needs.check.result }}" = "success" ] && [ "${{ needs.docker.result }}" = "success" ]
