@@ -1,0 +1,23 @@
+{
+  "name": "@xolo-replacement-ou/cli",
+  "version": "0.1.0",
+  "description": "Command-line interface for the OÜ business manager",
+  "type": "module",
+  "bin": { "oum": "./dist/bin.js" },
+  "files": ["dist"],
+  "engines": { "node": ">=22.12" },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx src/bin.ts",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "smoke": "node dist/bin.js --version"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.23.0",
+    "typescript": "^7.0.0",
+    "vitest": "^5.0.0"
+  }
+}
