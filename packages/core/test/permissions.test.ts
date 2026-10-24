@@ -74,5 +74,9 @@ describe("Permissions", () => {
     it("creates a write permission", () => {
       expect(createPermission("companies", "write")).toBe("companies:write");
     });
+
+    it("creates a delete permission", () => {
+      expect(createPermission("companies", "delete")).toBe("companies:delete");
+    });
   });
 });
