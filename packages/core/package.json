@@ -1,0 +1,22 @@
+{
+  "name": "@ou-manager/core",
+  "version": "0.1.0",
+  "description": "Business logic for the OÜ business manager: domain rules, use cases and ports",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.0",
+    "vitest": "^5.0.0"
+  }
+}
