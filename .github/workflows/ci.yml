@@ -30,27 +30,70 @@ jobs:
               - '**'
               - '!**/*.md'
               - '!**/*.mdx'
-              
+
   check:
     name: Check (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+
     strategy:
       fail-fast: false
       matrix:
         node: [22, 24]
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      TEST_DATABASE_URL: postgresql://oum_test:oum_test@localhost:5432/oum_test
+      PGPASSWORD: postgres
+
     steps:
       - uses: actions/checkout@v7
+
       - uses: pnpm/setup@v3
         with:
           runtime: node@${{ matrix.node }}
           cache: true
           require-lockfile: true
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
+
+      - name: Create restricted test database
+        run: |
+          psql -h localhost -U postgres -d postgres \
+            -c "CREATE ROLE oum_test LOGIN PASSWORD 'oum_test';"
+
+          psql -h localhost -U postgres -d postgres \
+            -c "CREATE DATABASE oum_test OWNER oum_test;"
+
+      - name: Run test database migrations
+        run: pnpm db:migrate:test
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Run unit tests
+        run: pnpm test
+
+      - name: Run PostgreSQL integration tests
+        run: pnpm --filter @ou-manager/db test:integration
+
+      - name: Build
+        run: pnpm build
+
       - name: Smoke test the compiled binary
-        run: pnpm --filter @@ou-manager/cli smoke
+        run: pnpm --filter @ou-manager/cli smoke
 
   docker:
     name: Docker build + test
@@ -58,6 +101,7 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+
       - name: Build and test in Docker
         run: docker build --target test --tag ou-manager:test .
 
