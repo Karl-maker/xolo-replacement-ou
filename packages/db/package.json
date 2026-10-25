@@ -17,13 +17,14 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "generate": "prisma generate",
-    "build": "prisma generate && tsc -p tsconfig.build.json",
-    "typecheck": "prisma generate && tsc -p tsconfig.json",
+    "generate": "node scripts/generate-client.mjs",
+    "build": "pnpm generate && tsc -p tsconfig.build.json",
+    "typecheck": "pnpm generate && tsc -p tsconfig.json",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "migrate:status": "prisma migrate status",
-    "test:integration": "prisma generate && vitest run"
+    "migrate:test": "prisma migrate deploy --config prisma.test.config.ts",
+    "test:integration": "pnpm generate && vitest run"
   },
   "dependencies": {
     "@ou-manager/core": "workspace:*",
