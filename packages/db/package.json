@@ -18,8 +18,8 @@
   },
   "scripts": {
     "generate": "node scripts/generate-client.mjs",
-    "build": "pnpm generate && tsc -p tsconfig.build.json",
-    "typecheck": "pnpm generate && tsc -p tsconfig.json",
+    "build": "pnpm --filter @ou-manager/core build && pnpm generate && tsc -p tsconfig.build.json",
+    "typecheck": "pnpm --filter @ou-manager/core build && pnpm generate && tsc -p tsconfig.json",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "migrate:status": "prisma migrate status",
