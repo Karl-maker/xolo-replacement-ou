@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ERROR_CATALOG } from "../src/domain/errors/error-catalog.js";
-import type { DomainErrorCode } from "../src/domain/errors/errors.js";
+import { ERROR_CATALOG } from "../../src/domain/errors/error-catalog.js";
+import type { DomainErrorCode } from "../../src/domain/errors/errors.js";
 
 describe("ERROR_CATALOG", () => {
   it("defines a valid entry for every domain error code", () => {

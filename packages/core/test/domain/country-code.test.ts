@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parseCountryCode } from "../src/domain/country-code/index.js";
-import { DomainError } from "../src/domain/errors/index.js";
+import { parseCountryCode } from "../../src/domain/country-code/index.js";
+import { DomainError } from "../../src/domain/errors/index.js";
 
 describe("Country code", () => {
   it("accepts the supported country code EE", () => {

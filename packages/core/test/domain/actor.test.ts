@@ -3,9 +3,9 @@ import {
   assertCan,
   subjectUserId,
   type Actor,
-} from "../src/domain/actor/index.js";
-import { DomainError } from "../src/domain/errors/index.js";
-import type { Permission } from "../src/domain/permissions/index.js";
+} from "../../src/domain/actor/index.js";
+import { DomainError } from "../../src/domain/errors/index.js";
+import type { Permission } from "../../src/domain/permissions/index.js";
 
 describe("Actor", () => {
   describe("subjectUserId", () => {

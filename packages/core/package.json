@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "description": "Business logic for the OÜ business manager: domain rules, use cases and ports",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "files": [
     "dist"
   ],

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getErrorHelp } from "../src/domain/errors/error-help.js";
+import { getErrorHelp } from "../../src/domain/errors/error-help.js";
 
 describe("getErrorHelp()", () => {
   it("returns the error definition and documentation URL", () => {

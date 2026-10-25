@@ -3,7 +3,7 @@ import {
   createPermission,
   isPermission,
   parsePermission,
-} from "../src/domain/permissions/index.js";
+} from "../../src/domain/permissions/index.js";
 
 describe("Permissions", () => {
   describe("isPermission", () => {

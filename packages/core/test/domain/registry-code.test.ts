@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parseRegistryCode } from "../src/domain/registry-code/index.js";
-import { DomainError } from "../src/domain/errors/index.js";
+import { parseRegistryCode } from "../../src/domain/registry-code/index.js";
+import { DomainError } from "../../src/domain/errors/index.js";
 
 describe("Estonian registry code", () => {
   it.each(["12345678", "10422334", "12417834"])(

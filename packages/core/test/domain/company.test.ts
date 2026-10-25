@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parseName } from "../src/domain/company/index.js";
-import { DomainError } from "../src/domain/errors/index.js";
+import { parseName } from "../../src/domain/company/index.js";
+import { DomainError } from "../../src/domain/errors/index.js";
 
 describe("Company name", () => {
   it.each(["Acme", "Acme Ltd", "Company 123", "Éducation Caraïbes"])(
