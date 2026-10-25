@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Naming: models are PascalCase and singular, fields camelCase (that is what the code sees).
+// Tables are snake_case and plural, columns snake_case (that is what SQL sees), via @@map / @map.
+
+enum MembershipRole {
+  OWNER
+  READ_ONLY
+
+  @@map("membership_role")
+}
+
+model User {
+  id          String       @id @default(uuid(7)) @db.Uuid
+  name        String
+  email       String?      @unique
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  memberships Membership[]
+
+  @@map("users")
+}
+
+model Company {
+  id           String       @id @default(uuid(7)) @db.Uuid
+  country      String       @db.Char(2) // ISO 3166-1 alpha-2, e.g. "EE"
+  registryCode String       @map("registry_code")
+  name         String
+  createdAt    DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  archivedAt   DateTime?    @map("archived_at") @db.Timestamptz(3)
+  memberships  Membership[]
+
+  // A registry code is only unique within its country's register.
+  @@unique([country, registryCode])
+  @@map("companies")
+}
+
+// Which person may see which company, and in what role. "Companies under my user" is a membership
+// with role OWNER; an accountant later is a membership with role READ_ONLY.
+model Membership {
+  userId    String         @map("user_id") @db.Uuid
+  companyId String         @map("company_id") @db.Uuid
+  role      MembershipRole
+  createdAt DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Restrict)
+  company   Company        @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@id([userId, companyId])
+  @@index([companyId])
+  @@map("memberships")
+}
