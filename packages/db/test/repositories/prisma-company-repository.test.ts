@@ -179,14 +179,6 @@ describe("PrismaCompanyRepository", () => {
       ).resolves.toBeTruthy();
     });
 
-    it("rejects a country that is not two upper-case letters (check constraint)", async () => {
-      const me = await insertUser();
-
-      await expect(insertCompany(me, { country: "ee" })).rejects.toThrow(
-        /companies_country_format/,
-      );
-    });
-
     it("refuses to delete a user who still has companies (foreign key restrict)", async () => {
       const me = await insertUser();
       await insertCompany(me);

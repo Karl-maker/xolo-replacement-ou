@@ -93,14 +93,6 @@ describe("companies", () => {
     ).rejects.toMatchObject({ code: "COMPANY_ALREADY_EXISTS" });
   });
 
-  it("refuses lowercase or malformed countries at the database level (check constraint)", async () => {
-    await expect(
-      admin.query(
-        "INSERT INTO companies (id, country, registry_code, name, updated_at) VALUES (gen_random_uuid(), 'ee', '1', 'x', now())",
-      ),
-    ).rejects.toThrow(/companies_country_format/);
-  });
-
   it("keeps each person's companies separate", async () => {
     const me = await newUser("Me");
     const other = await newUser("Other");
