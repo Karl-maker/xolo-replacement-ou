@@ -6,8 +6,8 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "build": "pnpm -r build",
-    "typecheck": "pnpm -r typecheck",
+    "build": "pnpm --filter @ou-manager/core build && pnpm --filter @ou-manager/db build && pnpm --filter @ou-manager/cli build",
+    "typecheck": "pnpm --filter @ou-manager/core typecheck && pnpm --filter @ou-manager/db build && pnpm --filter @ou-manager/cli typecheck",
     "test": "pnpm -r test",
     "prepare": "husky",
     "verify": "pnpm build && pnpm typecheck && pnpm test",

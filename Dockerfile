@@ -6,7 +6,11 @@ ARG NODE_VERSION=22
 FROM node:${NODE_VERSION}-slim AS base
 # Keep in sync with "packageManager" in the root package.json.
 ARG PNPM_VERSION=12.15.0
-RUN npm install -g pnpm@${PNPM_VERSION}
+# Prisma needs the system OpenSSL library to select its engine reliably on slim images.
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y openssl \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install -g pnpm@${PNPM_VERSION}
 WORKDIR /app
 
 # ---------- deps: install dependencies ----------
