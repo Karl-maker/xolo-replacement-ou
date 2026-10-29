@@ -17,6 +17,21 @@ enum MembershipRole {
   @@map("membership_role")
 }
 
+enum AuditActorKind {
+  USER
+  AGENT
+
+  @@map("audit_actor_kind")
+}
+
+enum AuditOutcome {
+  SUCCEEDED
+  REJECTED
+  FAILED
+
+  @@map("audit_outcome")
+}
+
 model User {
   id          String       @id @default(uuid(7)) @db.Uuid
   name        String
@@ -37,10 +52,37 @@ model Company {
   updatedAt    DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
   archivedAt   DateTime?    @map("archived_at") @db.Timestamptz(3)
   memberships  Membership[]
+  auditEvents  AuditEvent[]
 
   // A registry code is only unique within its country's register.
   @@unique([country, registryCode])
   @@map("companies")
+}
+
+// Append-only business facts. Application roles receive INSERT/SELECT only;
+// the SQL migration adds a trigger as a second line of defence against updates.
+model AuditEvent {
+  id            String         @id @default(uuid(7)) @db.Uuid
+  occurredAt    DateTime       @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  companyId     String?        @map("company_id") @db.Uuid
+  actorKind     AuditActorKind @map("actor_kind")
+  actorId       String         @map("actor_id")
+  onBehalfOfId  String?        @map("on_behalf_of_id") @db.Uuid
+  action        String
+  outcome       AuditOutcome
+  resourceType  String         @map("resource_type")
+  resourceId    String         @map("resource_id")
+  correlationId String         @map("correlation_id")
+  source        String
+  actorSource   String?        @map("actor_source")
+  changes       Json?
+  company       Company?       @relation(fields: [companyId], references: [id], onDelete: Restrict)
+
+  @@index([companyId, occurredAt])
+  @@index([resourceType, resourceId, occurredAt])
+  @@index([actorId, occurredAt])
+  @@index([correlationId])
+  @@map("audit_events")
 }
 
 // Which person may see which company, and in what role. "Companies under my user" is a membership

@@ -23,12 +23,19 @@ describe("oum company add", () => {
     );
 
     expect(code).toBe(0);
-    expect(t.core.companies.add).toHaveBeenCalledWith({
-      actor: { kind: "user", userId: me.id },
-      name: "Syncpoly OÜ",
-      registryCode: "12345678",
-      country: "EE",
-    });
+    expect(t.core.companies.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actor: { kind: "user", userId: me.id },
+        name: "Syncpoly OÜ",
+        registryCode: "12345678",
+        country: "EE",
+        audit: expect.objectContaining({
+          source: "cli",
+          actorSource: "config",
+          correlationId: expect.any(String),
+        }),
+      }),
+    );
     expect(t.stdout()).toContain("Added Syncpoly OÜ (EE 12345678).");
     expect(t.stderr()).toBe("");
   });

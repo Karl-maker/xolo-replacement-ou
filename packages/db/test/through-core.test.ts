@@ -10,7 +10,12 @@ import {
   sql as admin,
 } from "./support/test-db.js";
 
-const core = createCore({ users: db.users, companies: db.companies });
+const core = createCore({
+  users: db.users,
+  companies: db.companies,
+  transactions: db.transactions,
+});
+const audit = { correlationId: "db-integration-test", source: "api" as const };
 
 beforeEach(resetDatabase);
 afterAll(closeDatabase);
@@ -58,6 +63,7 @@ describe("companies", () => {
       name: "Syncpoly OÜ",
       registryCode: "12345678",
       country: "ee",
+      audit,
     });
 
     expect(company).toMatchObject({
@@ -73,6 +79,21 @@ describe("companies", () => {
       [company.id],
     );
     expect(rows.rows).toEqual([{ role: "OWNER" }]);
+
+    const auditRows = await admin.query(
+      "SELECT action, outcome, company_id, actor_kind, actor_id, source FROM audit_events WHERE company_id = $1",
+      [company.id],
+    );
+    expect(auditRows.rows).toEqual([
+      {
+        action: "company.created",
+        outcome: "SUCCEEDED",
+        company_id: company.id,
+        actor_kind: "USER",
+        actor_id: me.kind === "user" ? me.userId : "",
+        source: "api",
+      },
+    ]);
   });
 
   it("enforces (country, registry code) uniqueness in the database", async () => {
@@ -82,6 +103,7 @@ describe("companies", () => {
       name: "Syncpoly OÜ",
       registryCode: "12345678",
       country: "EE",
+      audit,
     });
     await expect(
       core.companies.add({
@@ -89,8 +111,14 @@ describe("companies", () => {
         name: "Copy OÜ",
         registryCode: "12345678",
         country: "EE",
+        audit,
       }),
     ).rejects.toMatchObject({ code: "COMPANY_ALREADY_EXISTS" });
+
+    const auditRows = await admin.query(
+      "SELECT action FROM audit_events ORDER BY occurred_at",
+    );
+    expect(auditRows.rows).toEqual([{ action: "company.created" }]);
   });
 
   it("keeps each person's companies separate", async () => {
@@ -101,6 +129,7 @@ describe("companies", () => {
       name: "Mine OÜ",
       registryCode: "12345678",
       country: "EE",
+      audit,
     });
 
     expect(await core.companies.list({ actor: me })).toHaveLength(1);
@@ -119,6 +148,7 @@ describe("companies", () => {
       name: "Syncpoly OÜ",
       registryCode: "12345678",
       country: "EE",
+      audit,
     });
 
     expect(
@@ -134,6 +164,7 @@ describe("companies", () => {
       actor: me,
       ref: "12345678",
       country: "EE",
+      audit,
     });
     expect(archived.archivedAt).toBeInstanceOf(Date);
     expect(await core.companies.list({ actor: me })).toHaveLength(0);
@@ -149,6 +180,7 @@ describe("companies", () => {
       name: "Syncpoly OÜ",
       registryCode: "12345678",
       country: "EE",
+      audit,
     });
     const reader: Actor = {
       kind: "agent",
@@ -159,9 +191,34 @@ describe("companies", () => {
 
     expect(await core.companies.list({ actor: reader })).toHaveLength(1);
     await expect(
-      core.companies.archive({ actor: reader, ref: "12345678", country: "EE" }),
+      core.companies.archive({
+        actor: reader,
+        ref: "12345678",
+        country: "EE",
+        audit,
+      }),
     ).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
+  });
+});
+
+describe("audit event storage", () => {
+  it("rejects an attempt to change an audit event", async () => {
+    const me = await newUser();
+    const company = await core.companies.add({
+      actor: me,
+      name: "Syncpoly OÜ",
+      registryCode: "12345678",
+      country: "EE",
+      audit,
+    });
+
+    await expect(
+      admin.query(
+        "UPDATE audit_events SET action = 'forged' WHERE company_id = $1",
+        [company.id],
+      ),
+    ).rejects.toThrow("audit_events are append-only");
   });
 });

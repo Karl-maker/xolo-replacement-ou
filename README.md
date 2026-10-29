@@ -22,6 +22,8 @@ An open, self-hostable system that automates the administration of Estonian priv
 12. [Open decisions](#12-open-decisions)
 13. [Repository layout](#13-repository-layout)
 
+Developer documentation: [logging and audit trail](docs/logging.md).
+
 ---
 
 ## 1. Why this exists
@@ -53,21 +55,21 @@ It is built first for a single OÜ whose owner and board sit outside the EEA, bu
         └──► AI assistant: extraction, categorisation, Q&A with citations, drafts, anomaly flags
 ```
 
-A single profile (legal form, financial year end, VAT status, whether you pay salary or dividends, board location) drives everything. Change a field, for example *VAT registered = Yes*, and the matching obligations switch on automatically, with deadlines calculated for you.
+A single profile (legal form, financial year end, VAT status, whether you pay salary or dividends, board location) drives everything. Change a field, for example _VAT registered = Yes_, and the matching obligations switch on automatically, with deadlines calculated for you.
 
 ---
 
 ## 3. Principles
 
-| Principle | What it means in practice |
-|---|---|
-| **Deterministic where it matters** | Deadlines, tax maths and ledger posting are plain code, never AI. Every figure is reproducible from ledger data. |
-| **Human in the loop** | AI proposes, a person approves. The system never files, pays or signs on its own. |
-| **Rules are data** | Rates, thresholds and deadlines live in a versioned table with effective dates and source links, changeable without a code deployment. |
-| **Auditable** | Append-only audit log. Every AI output stores its prompt, sources and model version. |
-| **Portable** | Open export formats (CSV, JSON, PDF). No vendor lock-in. |
-| **Cheap to run** | Serverless or a small instance, pay-per-use AI, no per-seat fees. |
-| **Private by design** | No e-ID PINs or bank passwords stored. Personal data minimised. Providers that do not train on your data. |
+| Principle                          | What it means in practice                                                                                                              |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **Deterministic where it matters** | Deadlines, tax maths and ledger posting are plain code, never AI. Every figure is reproducible from ledger data.                       |
+| **Human in the loop**              | AI proposes, a person approves. The system never files, pays or signs on its own.                                                      |
+| **Rules are data**                 | Rates, thresholds and deadlines live in a versioned table with effective dates and source links, changeable without a code deployment. |
+| **Auditable**                      | Append-only audit log. Every AI output stores its prompt, sources and model version.                                                   |
+| **Portable**                       | Open export formats (CSV, JSON, PDF). No vendor lock-in.                                                                               |
+| **Cheap to run**                   | Serverless or a small instance, pay-per-use AI, no per-seat fees.                                                                      |
+| **Private by design**              | No e-ID PINs or bank passwords stored. Personal data minimised. Providers that do not train on your data.                              |
 
 ---
 
@@ -77,7 +79,7 @@ A single profile (legal form, financial year end, VAT status, whether you pay sa
 - **External accountants** who need read-only access to the books and records.
 - **Developers** who want to build on an open compliance engine for Estonian companies.
 
-Roles in v1: *owner/director* (approve and sign) and *read-only*.
+Roles in v1: _owner/director_ (approve and sign) and _read-only_.
 
 ---
 
@@ -85,12 +87,12 @@ Roles in v1: *owner/director* (approve and sign) and *read-only*.
 
 The system is split so that the business logic is independent of any interface.
 
-| Part | Role |
-|---|---|
-| **Core** | Company profile, obligation engine, ledger, tax and filing preparation, rules table, audit log, records vault, AI orchestration. All business logic lives here. |
-| **CLI** (`packages/cli`) | Command-line interface over core. Structured JSON output, structured errors, documented exit codes, an approval gate for anything with legal or financial effect. See the [CLI architecture](packages/cli/README.md). |
-| **Jobs** | Scheduled work: reminders, rule-freshness checks, bank imports, AI extraction. Reminder delivery is the critical path. |
-| **Web dashboard** (later) | "What do I do this month" view: next five deadlines, overdue items, month-close status, VAT threshold meter, expiries. |
+| Part                      | Role                                                                                                                                                                                                                  |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Core**                  | Company profile, obligation engine, ledger, tax and filing preparation, rules table, audit log, records vault, AI orchestration. All business logic lives here.                                                       |
+| **CLI** (`packages/cli`)  | Command-line interface over core. Structured JSON output, structured errors, documented exit codes, an approval gate for anything with legal or financial effect. See the [CLI architecture](packages/cli/README.md). |
+| **Jobs**                  | Scheduled work: reminders, rule-freshness checks, bank imports, AI extraction. Reminder delivery is the critical path.                                                                                                |
+| **Web dashboard** (later) | "What do I do this month" view: next five deadlines, overdue items, month-close status, VAT threshold meter, expiries.                                                                                                |
 
 The CLI is deliberately a thin, separate package. It parses input, calls core through a narrow interface and presents results. Core never depends on it, so a dashboard, API or any other front end can sit alongside it.
 
@@ -99,6 +101,7 @@ The CLI is deliberately a thin, separate package. It parses input, calls core th
 ## 6. Features by module
 
 ### Obligation engine and calendar
+
 - Obligations generated from the company profile via a rules table, not hard-coded logic.
 - **Always on:** annual report, up-to-date bookkeeping, beneficial-owner (UBO) accuracy, contact-person and legal-address validity, e-ID card validity.
 - **Switched on by profile or trigger:** VAT (KMD and KMD INF, due the 20th of the following month, nil returns included), TSD (due the 10th), OSS (quarterly), dividend tax (22/78 via TSD).
@@ -107,45 +110,53 @@ The CLI is deliberately a thin, separate package. It parses input, calls core th
 - Status per obligation: not due, preparing, ready for approval, filed, paid, overdue.
 
 ### Trigger detection
+
 - Rolling taxable turnover tracked against the EUR 40,000 VAT registration threshold, with alerts at 70%, 90% and 100%.
 - Payments to a natural person (salary, board fee, dividend, taxable benefit) detected, with a warning that TSD is due for that month.
 - EU cross-border sales flagged for a possible OSS or VAT-substance question.
 
 ### Document intake
+
 - Invoices and receipts accepted by upload, email forward and drag-and-drop.
 - AI extraction of supplier, date, number, net, VAT, total, currency and line items, with a confidence score.
 - Suggested account category and VAT code; a human confirms before posting.
 - Duplicate detection; originals stored unchanged and linked to their ledger entry.
 
 ### Banking and reconciliation
+
 - Bank and EMI transaction import (CSV first, API where offered).
 - Automatic matching to invoices; unmatched items listed for review.
 - A month cannot be closed while unmatched or unapproved items remain.
 
 ### Ledger and reporting
+
 - Double-entry ledger with a configurable chart of accounts and fiscal periods.
 - Month and year close with locks; reopening requires a logged reason.
 - Trial balance, balance sheet, profit and loss, shareholder-loan view.
 - Sales invoicing with sequential numbering and PDF output, ready for later VAT registration.
 
 ### Filing preparation
+
 - **Annual report pack:** draft balance sheet, income statement and notes in the Business Register format, a shareholder approval resolution template, a board signature checklist, and a file or data set for manual submission.
 - **KMD and TSD packs** (when enabled): figures ready to enter or upload in e-MTA, reconciled to the ledger.
 - **Dividend guard:** checks distributable equity and calculates the 22/78 tax before a distribution is recorded, and requires explicit approval.
 - Who approved each filing, when, the submitted version and the receipt are all recorded.
 
 ### Registry and contract upkeep
+
 - Tracks board members, shareholders, UBOs, activity codes, legal address and contact person.
 - Prompts to update the register within the legal time (for example UBO within 30 days of a change).
 - Expiry tracking for the e-Residency card, legal-address contract and contact-person contract, with warnings at 90 and 30 days.
 - A yearly review task covering all of the above.
 
 ### Records vault
+
 - Accounting records and source documents kept for 7 years, searchable by date, supplier and type.
 - Resolutions, contracts, loan agreements and official letters from the contact person.
 - One-command export of a full company data pack for an accountant, bank or authority.
 
 ### AI assistant
+
 - Rule questions ("Do I need to file this month?") answered from retrieved official sources, with citations and the date they were checked.
 - Plain-language explanations and step-by-step guidance for any obligation.
 - Anomaly flags: unusual amounts, new suppliers, missing months, weekend postings, bank and ledger mismatches.
@@ -153,6 +164,7 @@ The CLI is deliberately a thin, separate package. It parses input, calls core th
 - Summaries of official letters from EMTA or the Register, with required actions and deadlines.
 
 ### Users, approvals and audit
+
 - Immutable audit log for every create, change, approval, and AI suggestion accepted or rejected.
 - Dashboard showing the next five deadlines, overdue items, month-close status, the VAT threshold meter and expiries.
 
@@ -160,16 +172,16 @@ The CLI is deliberately a thin, separate package. It parses input, calls core th
 
 ## 7. Where AI is used and where it is not
 
-| Task | Approach |
-|---|---|
-| Deadline calculation, tax maths, ledger posting | **Deterministic code only.** No AI. |
-| Reading invoices and receipts | AI extraction, human confirms |
-| Categorising spend and suggesting VAT codes | AI suggestion with confidence, learns from corrections |
-| Bank matching | Rules first, AI for ambiguous cases |
-| Rule Q&A and plain-language guidance | AI with retrieval from official sources, citations required |
-| Anomaly detection | Rules plus AI review notes |
-| Drafting resolutions, notes, emails and letter summaries | AI draft, human edits |
-| Filing, paying, signing | **Human only** |
+| Task                                                     | Approach                                                    |
+| -------------------------------------------------------- | ----------------------------------------------------------- |
+| Deadline calculation, tax maths, ledger posting          | **Deterministic code only.** No AI.                         |
+| Reading invoices and receipts                            | AI extraction, human confirms                               |
+| Categorising spend and suggesting VAT codes              | AI suggestion with confidence, learns from corrections      |
+| Bank matching                                            | Rules first, AI for ambiguous cases                         |
+| Rule Q&A and plain-language guidance                     | AI with retrieval from official sources, citations required |
+| Anomaly detection                                        | Rules plus AI review notes                                  |
+| Drafting resolutions, notes, emails and letter summaries | AI draft, human edits                                       |
+| Filing, paying, signing                                  | **Human only**                                              |
 
 Low AI confidence forces human review. Personal IDs and bank numbers are redacted before anything is sent to a model where possible.
 
@@ -179,13 +191,13 @@ Low AI confidence forces human review. Personal IDs and bank numbers are redacte
 
 Because the management board sits outside the EEA, some requirements are real-world arrangements, not features:
 
-| Need | What to do |
-|---|---|
+| Need                                   | What to do                                                                                                                                       |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Estonian contact person** (licensed) | Generally required for boards outside the EEA. Buy from an Estonian corporate service provider; it receives official legal mail and forwards it. |
-| **Estonian legal address** | Every OÜ needs one, usually a virtual-office service often bundled with the contact person. |
-| **Valid e-Residency digital ID** | Needed to sign the annual report and make register filings. The system tracks expiry. |
-| **Business bank or EMI account** | Needed for bookkeeping and later for tax payments. |
-| **Financial year decision** | Default is the calendar year (annual report due 30 June). Decide before the first year closes. |
+| **Estonian legal address**             | Every OÜ needs one, usually a virtual-office service often bundled with the contact person.                                                      |
+| **Valid e-Residency digital ID**       | Needed to sign the annual report and make register filings. The system tracks expiry.                                                            |
+| **Business bank or EMI account**       | Needed for bookkeeping and later for tax payments.                                                                                               |
+| **Financial year decision**            | Default is the calendar year (annual report due 30 June). Decide before the first year closes.                                                   |
 
 If you recently changed accounting provider, check whether your contact person and legal address arrangements are still in place.
 
@@ -193,16 +205,16 @@ If you recently changed accounting provider, check whether your contact person a
 
 ## 9. Roadmap
 
-| Phase | Scope |
-|---|---|
-| **1. Foundations** | Company profile, obligation engine, calendar and reminders, records vault, expiry tracker |
-| **2. Books** | Document intake with AI extraction, bank import, ledger, month close |
-| **3. Filings and AI** | Annual report pack, dividend guard, AI assistant with citations |
+| Phase                 | Scope                                                                                         |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| **1. Foundations**    | Company profile, obligation engine, calendar and reminders, records vault, expiry tracker     |
+| **2. Books**          | Document intake with AI extraction, bank import, ledger, month close                          |
+| **3. Filings and AI** | Annual report pack, dividend guard, AI assistant with citations                               |
 | **4. When triggered** | VAT module (KMD, KMD INF, OSS) and TSD module; direct e-MTA submission if an API is available |
 
 Example acceptance criteria:
 
-- Setting *VAT registered = Yes* creates the monthly KMD obligation with the correct 20th-of-month deadline within a minute.
+- Setting _VAT registered = Yes_ creates the monthly KMD obligation with the correct 20th-of-month deadline within a minute.
 - Setting the year end to 30 June moves the annual report deadline to 31 December.
 - Recording a first payment to a person creates a TSD obligation due on the 10th of the next month and warns the owner.
 - A month with unmatched bank items cannot be closed.
@@ -214,18 +226,18 @@ Example acceptance criteria:
 
 ## 10. Non-functional commitments
 
-| Area | Commitment |
-|---|---|
-| Correctness | Every rate, threshold and deadline is in a versioned config table with effective date and source link. Automated tests cover every deadline rule. |
-| Rule freshness | A scheduled job watches official pages for changes and alerts the owner. Rules change only after human review. |
-| Security | MFA, encryption in transit and at rest, secrets in a secrets manager, least privilege, no shared credentials. |
-| Sensitive data | Never store e-ID PINs or bank passwords. Bank access by read-only token or file import. |
-| Privacy | GDPR-aware: minimised data, logged access, export and deletion except where record-keeping law requires retention. |
-| Reliability | Reminder delivery with at-least-once semantics, retries and a secondary channel. Target 99.5% availability. |
-| Backup | Daily backups, tested restores, RPO and RTO of 24 hours. Deleted records recoverable for 30 days. |
-| Locale | All deadlines in Europe/Tallinn. English interface with Estonian terms (KMD, TSD) shown. |
-| Observability | Logging, error alerts and a health page for jobs. |
-| Usability | A one-screen "what do I do this month" view; any new obligation understandable in under two minutes. |
+| Area           | Commitment                                                                                                                                        |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Correctness    | Every rate, threshold and deadline is in a versioned config table with effective date and source link. Automated tests cover every deadline rule. |
+| Rule freshness | A scheduled job watches official pages for changes and alerts the owner. Rules change only after human review.                                    |
+| Security       | MFA, encryption in transit and at rest, secrets in a secrets manager, least privilege, no shared credentials.                                     |
+| Sensitive data | Never store e-ID PINs or bank passwords. Bank access by read-only token or file import.                                                           |
+| Privacy        | GDPR-aware: minimised data, logged access, export and deletion except where record-keeping law requires retention.                                |
+| Reliability    | Reminder delivery with at-least-once semantics, retries and a secondary channel. Target 99.5% availability.                                       |
+| Backup         | Daily backups, tested restores, RPO and RTO of 24 hours. Deleted records recoverable for 30 days.                                                 |
+| Locale         | All deadlines in Europe/Tallinn. English interface with Estonian terms (KMD, TSD) shown.                                                          |
+| Observability  | Logging, error alerts and a health page for jobs.                                                                                                 |
+| Usability      | A one-screen "what do I do this month" view; any new obligation understandable in under two minutes.                                              |
 
 ---
 

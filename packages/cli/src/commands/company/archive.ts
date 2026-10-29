@@ -35,14 +35,17 @@ export default defineCommand({
         hint: "Run it again with --yes to confirm.",
       });
     }
-    const { actor } = await ctx.actor();
-    return ctx
-      .core()
-      .companies.archive({
-        actor,
-        ref: input.ref,
-        country: input.country ?? ctx.config.defaultCountry,
-      });
+    const { actor, source } = await ctx.actor();
+    return ctx.core().companies.archive({
+      actor,
+      ref: input.ref,
+      country: input.country ?? ctx.config.defaultCountry,
+      audit: {
+        correlationId: ctx.invocation.correlationId,
+        source: "cli",
+        actorSource: source,
+      },
+    });
   },
   human: (c) => `Archived ${c.name} (${c.country} ${c.registryCode}).`,
 });

@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { archiveCompany } from "../../../src/application/companies/archive-company.js";
 import { createFakes, NOW } from "../../support/fakes.js";
-import { aCompany, aUser, asAgent, asUser } from "../../support/builders.js";
+import {
+  aCompany,
+  anAuditContext,
+  aUser,
+  asAgent,
+  asUser,
+} from "../../support/builders.js";
 
 function setup() {
   const fakes = createFakes();
@@ -13,9 +19,17 @@ function setup() {
   );
   const run = archiveCompany({
     companies: fakes.companies,
+    transactions: fakes.transactions,
     clock: fakes.clock,
   });
-  return { ...fakes, me, someoneElse, company, run };
+  return {
+    ...fakes,
+    me,
+    someoneElse,
+    company,
+    run,
+    auditContext: anAuditContext(),
+  };
 }
 
 describe("archiveCompany", () => {
@@ -26,16 +40,28 @@ describe("archiveCompany", () => {
       actor: asUser(t.me),
       ref: "12345678",
       country: "EE",
+      audit: t.auditContext,
     });
 
     expect(archived.archivedAt).toEqual(NOW);
     expect(t.companies.all()[0]?.archivedAt).toEqual(NOW);
+    expect(t.audit.all()).toEqual([
+      expect.objectContaining({
+        action: "company.archived",
+        companyId: t.company.id,
+      }),
+    ]);
   });
 
   it("archives rather than deletes: the company is still there", async () => {
     const t = setup();
 
-    await t.run({ actor: asUser(t.me), ref: t.company.id, country: "EE" });
+    await t.run({
+      actor: asUser(t.me),
+      ref: t.company.id,
+      country: "EE",
+      audit: t.auditContext,
+    });
 
     expect(t.companies.all()).toHaveLength(1);
   });
@@ -45,7 +71,12 @@ describe("archiveCompany", () => {
     const archive = vi.spyOn(t.companies, "archive");
 
     await expect(
-      t.run({ actor: asUser(t.someoneElse), ref: "12345678", country: "EE" }),
+      t.run({
+        actor: asUser(t.someoneElse),
+        ref: "12345678",
+        country: "EE",
+        audit: t.auditContext,
+      }),
     ).rejects.toMatchObject({
       code: "COMPANY_NOT_FOUND",
     });
@@ -57,7 +88,12 @@ describe("archiveCompany", () => {
     const t = setup();
 
     await expect(
-      t.run({ actor: asUser(t.me), ref: "10422334", country: "EE" }),
+      t.run({
+        actor: asUser(t.me),
+        ref: "10422334",
+        country: "EE",
+        audit: t.auditContext,
+      }),
     ).rejects.toMatchObject({
       code: "COMPANY_NOT_FOUND",
     });
@@ -71,6 +107,7 @@ describe("archiveCompany", () => {
         actor: asAgent(t.me, ["companies:read", "companies:write"]),
         ref: "12345678",
         country: "EE",
+        audit: t.auditContext,
       });
 
       expect(archived.archivedAt).toEqual(NOW);
@@ -84,6 +121,7 @@ describe("archiveCompany", () => {
           actor: asAgent(t.me, ["companies:write"]),
           ref: "12345678",
           country: "EE",
+          audit: t.auditContext,
         }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" });
       expect(t.company.archivedAt).toBeNull();
@@ -97,6 +135,7 @@ describe("archiveCompany", () => {
           actor: asAgent(t.me, ["companies:read"]),
           ref: "12345678",
           country: "EE",
+          audit: t.auditContext,
         }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" });
     });

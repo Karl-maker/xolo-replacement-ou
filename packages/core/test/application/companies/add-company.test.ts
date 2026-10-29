@@ -1,19 +1,30 @@
 import { describe, expect, it, vi } from "vitest";
 import { addCompany } from "../../../src/application/companies/add-company.js";
 import { createFakes } from "../../support/fakes.js";
-import { aCompany, aUser, asAgent, asUser } from "../../support/builders.js";
+import {
+  aCompany,
+  anAuditContext,
+  aUser,
+  asAgent,
+  asUser,
+} from "../../support/builders.js";
 
 // Every test builds its own world with setup(): fresh fakes, the use case under test, a seeded owner.
 function setup() {
   const fakes = createFakes();
   const owner = fakes.users.seed(aUser());
-  const run = addCompany({ companies: fakes.companies, users: fakes.users });
+  const run = addCompany({
+    companies: fakes.companies,
+    users: fakes.users,
+    transactions: fakes.transactions,
+    clock: fakes.clock,
+  });
   const valid = {
     name: "Syncpoly OÜ",
     registryCode: "12345678",
     country: "EE",
   };
-  return { ...fakes, owner, run, valid };
+  return { ...fakes, owner, run, valid, auditContext: anAuditContext() };
 }
 
 describe("addCompany", () => {
@@ -21,7 +32,11 @@ describe("addCompany", () => {
     it("stores the company and makes the actor its owner", async () => {
       const t = setup();
 
-      const company = await t.run({ actor: asUser(t.owner), ...t.valid });
+      const company = await t.run({
+        actor: asUser(t.owner),
+        ...t.valid,
+        audit: t.auditContext,
+      });
 
       expect(company).toMatchObject({
         name: "Syncpoly OÜ",
@@ -31,6 +46,13 @@ describe("addCompany", () => {
       });
       expect(t.companies.all()).toEqual([company]);
       expect(t.companies.ownersOf(company.id)).toEqual([t.owner.id]);
+      expect(t.audit.all()).toEqual([
+        expect.objectContaining({
+          action: "company.created",
+          companyId: company.id,
+          context: t.auditContext,
+        }),
+      ]);
     });
 
     it("normalises country, registry code and name", async () => {
@@ -41,6 +63,7 @@ describe("addCompany", () => {
         name: "  Syncpoly    OÜ ",
         registryCode: " 1234-5678 ",
         country: "ee",
+        audit: t.auditContext,
       });
 
       expect(company).toMatchObject({
@@ -56,6 +79,7 @@ describe("addCompany", () => {
       const company = await t.run({
         actor: asAgent(t.owner, ["companies:write"]),
         ...t.valid,
+        audit: t.auditContext,
       });
 
       expect(t.companies.ownersOf(company.id)).toEqual([t.owner.id]);
@@ -69,7 +93,11 @@ describe("addCompany", () => {
         const t = setup();
 
         await expect(
-          t.run({ actor: asAgent(t.owner, [...granted]), ...t.valid }),
+          t.run({
+            actor: asAgent(t.owner, [...granted]),
+            ...t.valid,
+            audit: t.auditContext,
+          }),
         ).rejects.toMatchObject({
           code: "FORBIDDEN",
         });
@@ -86,6 +114,7 @@ describe("addCompany", () => {
           name: "",
           registryCode: "nope",
           country: "??",
+          audit: t.auditContext,
         }),
       ).rejects.toMatchObject({ code: "FORBIDDEN" });
     });
@@ -119,7 +148,12 @@ describe("addCompany", () => {
       const create = vi.spyOn(t.companies, "create");
 
       await expect(
-        t.run({ actor: asUser(t.owner), ...t.valid, ...change }),
+        t.run({
+          actor: asUser(t.owner),
+          ...t.valid,
+          ...change,
+          audit: t.auditContext,
+        }),
       ).rejects.toMatchObject({ code });
 
       // Bad input must be caught before any storage work happens.
@@ -133,7 +167,7 @@ describe("addCompany", () => {
       const stranger = aUser(); // never seeded
 
       await expect(
-        t.run({ actor: asUser(stranger), ...t.valid }),
+        t.run({ actor: asUser(stranger), ...t.valid, audit: t.auditContext }),
       ).rejects.toMatchObject({ code: "USER_NOT_FOUND" });
       expect(t.companies.all()).toHaveLength(0);
     });
@@ -143,7 +177,7 @@ describe("addCompany", () => {
       t.companies.seed(aCompany(), t.owner.id);
 
       await expect(
-        t.run({ actor: asUser(t.owner), ...t.valid }),
+        t.run({ actor: asUser(t.owner), ...t.valid, audit: t.auditContext }),
       ).rejects.toMatchObject({
         code: "COMPANY_ALREADY_EXISTS",
       });
@@ -157,9 +191,9 @@ describe("addCompany", () => {
       const outage = new Error("connection lost");
       vi.spyOn(t.companies, "create").mockRejectedValueOnce(outage);
 
-      await expect(t.run({ actor: asUser(t.owner), ...t.valid })).rejects.toBe(
-        outage,
-      );
+      await expect(
+        t.run({ actor: asUser(t.owner), ...t.valid, audit: t.auditContext }),
+      ).rejects.toBe(outage);
     });
   });
 });

@@ -1,4 +1,5 @@
 import type { CompanyRepository } from "./ports/company-repository.js";
+import type { TransactionRunner } from "./ports/transaction-runner.js";
 import type { UserRepository } from "./ports/user-repository.js";
 import { addCompany } from "./companies/add-company.js";
 import { archiveCompany } from "./companies/archive-company.js";
@@ -11,6 +12,8 @@ import { listUsers } from "./users/list-users.js";
 export interface CoreDeps {
   companies: CompanyRepository;
   users: UserRepository;
+  /** Coordinates business writes with append-only audit events. */
+  transactions: TransactionRunner;
   /** Injected so tests (and later, ledger locks) never depend on the real clock. */
   clock?: () => Date;
 }
@@ -22,6 +25,7 @@ export interface CoreDeps {
 export function createCore({
   companies,
   users,
+  transactions,
   clock = () => new Date(),
 }: CoreDeps) {
   return {
@@ -31,10 +35,10 @@ export function createCore({
       get: getUser(users),
     },
     companies: {
-      add: addCompany({ companies, users }),
+      add: addCompany({ companies, users, transactions, clock }),
       list: listCompanies(companies),
       get: getCompany(companies),
-      archive: archiveCompany({ companies, clock }),
+      archive: archiveCompany({ companies, transactions, clock }),
     },
   };
 }

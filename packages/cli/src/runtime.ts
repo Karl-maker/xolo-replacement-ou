@@ -4,6 +4,7 @@ import { createFileConfigStore } from "./config/store.js";
 import type { Deps } from "./context.js";
 import { CliError } from "./errors/cli-error.js";
 import type { IO } from "./io/streams.js";
+import { createJsonLogger } from "./observability/logger.js";
 
 export interface Runtime {
   deps: Deps;
@@ -35,7 +36,11 @@ export function createRuntime(options: {
         });
       }
       db = createDatabase({ connectionString });
-      core = createCore({ users: db.users, companies: db.companies });
+      core = createCore({
+        users: db.users,
+        companies: db.companies,
+        transactions: db.transactions,
+      });
     }
     return core;
   };
@@ -47,6 +52,11 @@ export function createRuntime(options: {
       version: options.version,
       core: getCore,
       config: createFileConfigStore(options.configPath),
+      logger: createJsonLogger({
+        write: (line) => options.io.err.write(line),
+        // Operational logs are opt-in for a human-facing CLI. Services enable this by default.
+        enabled: options.env["OUM_LOG_JSON"] === "1",
+      }),
     },
     async close() {
       await db?.close();

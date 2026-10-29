@@ -9,6 +9,8 @@ import {
 import { isUniqueViolation } from "../errors.js";
 import type { PrismaClient } from "../generated/client.js";
 
+type CompanyPrisma = Pick<PrismaClient, "company">;
+
 const select = {
   id: true,
   country: true,
@@ -33,7 +35,7 @@ const toCompany = (row: Row): Company => ({
 });
 
 export class PrismaCompanyRepository implements CompanyRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: CompanyPrisma) {}
 
   async create(input: NewCompany, ownerId: string): Promise<Company> {
     try {

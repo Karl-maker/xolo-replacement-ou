@@ -1,5 +1,11 @@
 import { randomUUID } from "node:crypto";
-import type { Actor, Company, Permission, User } from "../../src/index.js";
+import type {
+  Actor,
+  AuditContext,
+  Company,
+  Permission,
+  User,
+} from "../../src/index.js";
 
 // Test data builders: a valid object by default, override only what the test is about.
 // A test that says aCompany({ archivedAt: someDate }) tells the reader exactly what matters.
@@ -37,4 +43,14 @@ export const asAgent = (
   agentId: "test-agent",
   onBehalfOf: onBehalfOf.id,
   permissions,
+});
+
+/** An adapter-owned invocation context for audit-event tests. */
+export const anAuditContext = (
+  overrides: Partial<AuditContext> = {},
+): AuditContext => ({
+  correlationId: "audit-test-correlation-id",
+  source: "cli",
+  actorSource: "config",
+  ...overrides,
 });

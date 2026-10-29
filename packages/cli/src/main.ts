@@ -7,6 +7,7 @@ import { mapError } from "./errors/map-error.js";
 import { parseInvocation } from "./framework/parse.js";
 import { helpFor } from "./output/help.js";
 import { renderError, renderResult } from "./output/render.js";
+import { randomUUID } from "node:crypto";
 
 // main() is the whole program as a plain function: arguments in, exit code out.
 // It never reads `process` and never exits, which is what makes it testable.
@@ -14,6 +15,7 @@ export async function main(argv: string[], deps: Deps): Promise<number> {
   // Needed even when parsing fails, so errors can still be printed as JSON or with details.
   const wantsJson = argv.includes("--json");
   const wantsDebug = argv.includes("--debug");
+  const correlationId = randomUUID();
 
   try {
     if (argv[0] === "--version" || argv[0] === "-v") {
@@ -29,12 +31,20 @@ export async function main(argv: string[], deps: Deps): Promise<number> {
     }
 
     const config = await deps.config.read();
-    const ctx = createContext(deps, config, invocation.flags);
+    const ctx = createContext(deps, config, invocation.flags, correlationId);
     const result = await invocation.command.run(invocation.input, ctx);
     renderResult(invocation.command, result, ctx);
+    deps.logger.info("command.completed", {
+      command: invocation.command.name,
+      correlationId,
+    });
     return EXIT.ok;
   } catch (error) {
     const mapped = mapError(error);
+    deps.logger.error("command.failed", {
+      correlationId,
+      errorCode: mapped.info.code,
+    });
     renderError(mapped, deps.io, { json: wantsJson, debug: wantsDebug });
     return mapped.exitCode;
   }
@@ -44,6 +54,7 @@ function createContext(
   deps: Deps,
   config: Config,
   flags: GlobalFlags,
+  correlationId: string,
 ): Context {
   let actor: Promise<ResolvedActor> | undefined;
   return {
@@ -53,6 +64,8 @@ function createContext(
     configStore: deps.config,
     flags,
     core: deps.core,
+    logger: deps.logger,
+    invocation: { correlationId },
     // Resolved on first use only, so `oum user list` never needs a selected user.
     actor: () =>
       (actor ??= resolveActor({

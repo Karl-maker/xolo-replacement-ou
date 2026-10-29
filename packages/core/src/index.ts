@@ -7,6 +7,19 @@ export type {
   CompanyRef,
 } from "./application/ports/company-repository.js";
 export type { UserRepository } from "./application/ports/user-repository.js";
+export type { AuditLog } from "./application/ports/audit-log.js";
+export type {
+  TransactionPorts,
+  TransactionRunner,
+} from "./application/ports/transaction-runner.js";
+export {
+  AUDIT_ACTION,
+  type AuditAction,
+  type AuditChanges,
+  type AuditContext,
+  type AuditEventDraft,
+  type AuditOutcome,
+} from "./application/audit/audit-event.js";
 
 export type { Company, NewCompany } from "./domain/company/index.js";
 export type { User, NewUser } from "./domain/user/index.js";

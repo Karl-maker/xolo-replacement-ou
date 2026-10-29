@@ -28,12 +28,17 @@ export default defineCommand({
     country: z.string().optional(),
   }),
   async run(input, ctx) {
-    const { actor } = await ctx.actor();
+    const { actor, source } = await ctx.actor();
     return ctx.core().companies.add({
       actor,
       name: input.name,
       registryCode: input.registryCode,
       country: input.country ?? ctx.config.defaultCountry,
+      audit: {
+        correlationId: ctx.invocation.correlationId,
+        source: "cli",
+        actorSource: source,
+      },
     });
   },
   human: (c) =>

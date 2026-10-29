@@ -7,12 +7,14 @@ import {
 import { isUniqueViolation } from "../errors.js";
 import type { PrismaClient } from "../generated/client.js";
 
+type UserPrisma = Pick<PrismaClient, "user">;
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const select = { id: true, name: true, email: true, createdAt: true } as const;
 
 export class PrismaUserRepository implements UserRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(private readonly prisma: UserPrisma) {}
 
   async create(input: NewUser): Promise<User> {
     try {
