@@ -1,7 +1,7 @@
 {
   "name": "@ou-manager/cli",
   "version": "0.1.0",
-  "description": "Command-line interface for the OÜ business manager",
+  "description": "Command-line interface for Edu Service",
   "type": "module",
   "bin": {
     "oum": "./dist/bin.js"

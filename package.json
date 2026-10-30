@@ -1,5 +1,5 @@
 {
-  "name": "ou-manager",
+  "name": "edu-service",
   "private": true,
   "packageManager": "pnpm@12.15.0",
   "engines": {

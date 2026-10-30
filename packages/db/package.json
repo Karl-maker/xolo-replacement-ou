@@ -1,7 +1,7 @@
 {
   "name": "@ou-manager/db",
   "version": "0.1.0",
-  "description": "PostgreSQL persistence for the OÜ business manager (Prisma schema, migrations, repositories)",
+  "description": "PostgreSQL persistence for Edu Service (Prisma schema, migrations, repositories)",
   "type": "module",
   "exports": {
     ".": {

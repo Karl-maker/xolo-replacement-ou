@@ -1,7 +1,7 @@
 {
   "name": "@ou-manager/core",
   "version": "0.1.0",
-  "description": "Business logic for the OÜ business manager: domain rules, use cases and ports",
+  "description": "Core domain rules, use cases, and ports for Edu Service",
   "type": "module",
   "exports": {
     ".": {
