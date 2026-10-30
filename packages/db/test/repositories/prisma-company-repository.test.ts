@@ -65,6 +65,27 @@ describe("PrismaCompanyRepository", () => {
       ).rejects.toMatchObject({ code: "COMPANY_ALREADY_EXISTS" });
       expect(await count("companies")).toBe(1);
     });
+
+    it("stores multiple companies without registration numbers", async () => {
+      const ownerId = await insertUser();
+
+      const first = await db.companies.create(
+        { country: "US", registryCode: null, name: "First learning community" },
+        ownerId,
+      );
+      const second = await db.companies.create(
+        {
+          country: "US",
+          registryCode: null,
+          name: "Second learning community",
+        },
+        ownerId,
+      );
+
+      expect(first.registryCode).toBeNull();
+      expect(second.registryCode).toBeNull();
+      expect(await count("companies")).toBe(2);
+    });
   });
 
   describe("findForUser", () => {
@@ -144,15 +165,13 @@ describe("PrismaCompanyRepository", () => {
       ).toEqual(["Live OÜ", "Old OÜ"]);
     });
 
-    it("refuses to load a row whose country the domain does not support", async () => {
+    it("loads companies from any ISO 3166-1 alpha-2 country", async () => {
       const me = await insertUser();
-      await insertCompany(me, { country: "LV" }); // the database allows it; the domain does not (yet)
+      await insertCompany(me, { country: "LV" });
 
       await expect(
         db.companies.listForUser(me, { includeArchived: false }),
-      ).rejects.toMatchObject({
-        code: "UNSUPPORTED_COUNTRY",
-      });
+      ).resolves.toEqual([expect.objectContaining({ country: "LV" })]);
     });
   });
 

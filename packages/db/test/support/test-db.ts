@@ -52,7 +52,7 @@ export async function insertCompany(
   ownerId: string,
   overrides: {
     name?: string;
-    registryCode?: string;
+    registryCode?: string | null;
     country?: string;
     archived?: boolean;
   } = {},
@@ -62,7 +62,7 @@ export async function insertCompany(
      VALUES (gen_random_uuid(), $1, $2, $3, $4, now()) RETURNING id`,
     [
       overrides.country ?? "EE",
-      overrides.registryCode ?? "12345678",
+      "registryCode" in overrides ? overrides.registryCode : "12345678",
       overrides.name ?? "Syncpoly OÜ",
       overrides.archived ? new Date("2026-02-01T00:00:00Z") : null,
     ],

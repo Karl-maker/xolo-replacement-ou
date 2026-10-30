@@ -5,7 +5,6 @@ import { mapError } from "../../src/errors/map-error.js";
 
 const EXPECTED: Record<DomainErrorCode, { code: string; exit: number }> = {
   INVALID_COUNTRY_CODE: { code: "USAGE", exit: 2 },
-  UNSUPPORTED_COUNTRY: { code: "USAGE", exit: 2 },
   INVALID_REGISTRY_CODE: { code: "USAGE", exit: 2 },
   INVALID_NAME: { code: "USAGE", exit: 2 },
   USER_NOT_FOUND: { code: "NOT_FOUND", exit: 3 },

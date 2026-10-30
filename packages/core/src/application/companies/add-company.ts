@@ -7,7 +7,7 @@ import type { Company } from "../../domain/company/index.js";
 import { parseName } from "../../domain/company/index.js";
 import { parseCountryCode } from "../../domain/country-code/index.js";
 import { DomainError } from "../../domain/errors/index.js";
-import { parseRegistryCode } from "../../domain/registry-code/index.js";
+import { parseOptionalRegistryCode } from "../../domain/registry-code/index.js";
 import { AUDIT_ACTION, type AuditContext } from "../audit/audit-event.js";
 import type { CompanyRepository } from "../ports/company-repository.js";
 import type { TransactionRunner } from "../ports/transaction-runner.js";
@@ -16,7 +16,7 @@ import type { UserRepository } from "../ports/user-repository.js";
 export interface AddCompanyInput {
   actor: Actor;
   name: string;
-  registryCode: string;
+  registryCode?: string;
   country: string;
   audit: AuditContext;
 }
@@ -34,7 +34,7 @@ export const addCompany =
 
     // 2. Validate and normalise everything first: no database work for bad input.
     const country = parseCountryCode(input.country);
-    const registryCode = parseRegistryCode(country, input.registryCode);
+    const registryCode = parseOptionalRegistryCode(input.registryCode);
     const name = parseName(input.name, "company");
 
     // 3. The company is owned by the person the actor represents.

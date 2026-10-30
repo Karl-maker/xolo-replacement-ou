@@ -14,7 +14,7 @@ export default defineCommand({
     "registry-code": {
       type: "string",
       short: "r",
-      description: "Business register code (Estonia: 8 digits)",
+      description: "Optional company registration number",
     },
     country: {
       type: "string",
@@ -24,7 +24,7 @@ export default defineCommand({
   },
   input: z.object({
     name: z.string().min(1),
-    registryCode: z.string().min(1),
+    registryCode: z.string().optional(),
     country: z.string().optional(),
   }),
   async run(input, ctx) {
@@ -32,7 +32,9 @@ export default defineCommand({
     return ctx.core().companies.add({
       actor,
       name: input.name,
-      registryCode: input.registryCode,
+      ...(input.registryCode === undefined
+        ? {}
+        : { registryCode: input.registryCode }),
       country: input.country ?? ctx.config.defaultCountry,
       audit: {
         correlationId: ctx.invocation.correlationId,
@@ -42,5 +44,5 @@ export default defineCommand({
     });
   },
   human: (c) =>
-    `Added ${c.name} (${c.country} ${c.registryCode}).\nid: ${c.id}`,
+    `Added ${c.name} (${c.country}${c.registryCode ? `, ${c.registryCode}` : ""}).\nid: ${c.id}`,
 });

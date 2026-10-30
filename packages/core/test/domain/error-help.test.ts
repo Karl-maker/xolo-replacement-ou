@@ -10,7 +10,8 @@ describe("getErrorHelp()", () => {
     expect(help).toEqual({
       title: "Invalid country code",
       description: "The supplied country code is not valid.",
-      resolution: "Check the code and use a supported country code.",
+      resolution:
+        "Check the code and use a valid ISO 3166-1 alpha-2 country code.",
       docsPath: "/errors/invalid-country-code",
       docsUrl: "https://docs.example.com/errors/invalid-country-code",
     });
@@ -30,16 +31,6 @@ describe("getErrorHelp()", () => {
 
     expect(help.docsUrl).toBeUndefined();
     expect(help.docsPath).toBe("/errors/invalid-country-code");
-  });
-
-  it("uses the configured documentation base URL", () => {
-    const help = getErrorHelp("UNSUPPORTED_COUNTRY", {
-      docsBaseUrl: "https://help.example.org",
-    });
-
-    expect(help.docsUrl).toBe(
-      "https://help.example.org/reference/supported-countries",
-    );
   });
 
   it("preserves the error definition fields", () => {

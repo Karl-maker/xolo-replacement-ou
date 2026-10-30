@@ -2,21 +2,24 @@ import { z } from "zod";
 import { CliError } from "../../errors/cli-error.js";
 import { defineCommand } from "../../framework/define-command.js";
 
-// There is deliberately no `company delete`: accounting records must be kept for years, so a company
-// is archived (hidden from lists), never erased.
+// Companies are archived (hidden from lists), never erased.
 export default defineCommand({
   name: "company archive",
   summary: "Archive a company (hides it from lists; the records are kept)",
   effect: "write",
   args: [
-    { name: "ref", description: "Registry code or company id", required: true },
+    {
+      name: "ref",
+      description: "Registration number or company id",
+      required: true,
+    },
   ],
   options: {
     country: {
       type: "string",
       short: "c",
       description:
-        "Country of the registry code (default: the configured default)",
+        "Country of the registration number (default: the configured default)",
     },
     yes: { type: "boolean", short: "y", description: "Confirm without asking" },
   },
@@ -47,5 +50,6 @@ export default defineCommand({
       },
     });
   },
-  human: (c) => `Archived ${c.name} (${c.country} ${c.registryCode}).`,
+  human: (c) =>
+    `Archived ${c.name} (${c.country}${c.registryCode ? `, ${c.registryCode}` : ""}).`,
 });

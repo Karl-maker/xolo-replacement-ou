@@ -5,7 +5,7 @@ import type { RegistryCode } from "../registry-code/index.js";
 export interface Company {
   id: string;
   country: CountryCode;
-  registryCode: RegistryCode;
+  registryCode: RegistryCode | null;
   name: string;
   createdAt: Date;
   /** Companies are never deleted (records must be kept for years); they are archived. */
@@ -15,7 +15,7 @@ export interface Company {
 /** What a company looks like before the database has given it an id. */
 export interface NewCompany {
   country: CountryCode;
-  registryCode: RegistryCode;
+  registryCode: RegistryCode | null;
   name: string;
 }
 

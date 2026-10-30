@@ -30,7 +30,7 @@ export const getCompany =
           const country = parseCountryCode(input.country);
           return {
             country,
-            registryCode: parseRegistryCode(country, input.ref),
+            registryCode: parseRegistryCode(input.ref),
           };
         })();
 

@@ -15,22 +15,20 @@ export default defineCommand({
   input: z.object({ includeArchived: z.boolean().optional() }),
   async run(input, ctx) {
     const { actor } = await ctx.actor();
-    return ctx
-      .core()
-      .companies.list({
-        actor,
-        includeArchived: input.includeArchived ?? false,
-      });
+    return ctx.core().companies.list({
+      actor,
+      includeArchived: input.includeArchived ?? false,
+    });
   },
   human: (companies) =>
     companies.length === 0
-      ? "No companies yet. Add one with: oum company add --name <name> --registry-code <code>"
+      ? "No companies yet. Add one with: oum company add --name <name>"
       : renderTable(
-          ["NAME", "COUNTRY", "REGISTRY CODE", "STATUS"],
+          ["NAME", "COUNTRY", "REGISTRATION NUMBER", "STATUS"],
           companies.map((c) => [
             c.name,
             c.country,
-            c.registryCode,
+            c.registryCode ?? "—",
             c.archivedAt ? "archived" : "active",
           ]),
         ),

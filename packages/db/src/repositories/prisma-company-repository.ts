@@ -23,7 +23,7 @@ const select = {
 type Row = {
   id: string;
   country: string;
-  registryCode: string;
+  registryCode: string | null;
   name: string;
   createdAt: Date;
   archivedAt: Date | null;
@@ -48,7 +48,7 @@ export class PrismaCompanyRepository implements CompanyRepository {
       });
       return toCompany(row);
     } catch (error) {
-      if (isUniqueViolation(error)) {
+      if (input.registryCode !== null && isUniqueViolation(error)) {
         throw new DomainError(
           "COMPANY_ALREADY_EXISTS",
           `A company with registry code ${input.registryCode} already exists in ${input.country}.`,

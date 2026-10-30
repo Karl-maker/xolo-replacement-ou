@@ -11,15 +11,9 @@ export const ERROR_CATALOG: Record<DomainErrorCode, ErrorDefinition> = {
   INVALID_COUNTRY_CODE: {
     title: "Invalid country code",
     description: "The supplied country code is not valid.",
-    resolution: "Check the code and use a supported country code.",
+    resolution:
+      "Check the code and use a valid ISO 3166-1 alpha-2 country code.",
     docsPath: "/errors/invalid-country-code",
-  },
-
-  UNSUPPORTED_COUNTRY: {
-    title: "Unsupported country",
-    description: "The country is valid but is not supported.",
-    resolution: "Check the list of supported countries.",
-    docsPath: "/reference/supported-countries",
   },
 
   INVALID_REGISTRY_CODE: {

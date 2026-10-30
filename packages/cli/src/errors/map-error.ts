@@ -7,7 +7,6 @@ import { CliError } from "./cli-error.js";
 // fails the build here until it is mapped.
 const FROM_DOMAIN: Record<DomainErrorCode, ErrorCode> = {
   INVALID_COUNTRY_CODE: "USAGE",
-  UNSUPPORTED_COUNTRY: "USAGE",
   INVALID_REGISTRY_CODE: "USAGE",
   INVALID_NAME: "USAGE",
   USER_NOT_FOUND: "NOT_FOUND",
@@ -20,8 +19,7 @@ const FROM_DOMAIN: Record<DomainErrorCode, ErrorCode> = {
 const HINTS: Partial<Record<DomainErrorCode, string>> = {
   USER_NOT_FOUND: "Run `oum user list` to see the users.",
   COMPANY_NOT_FOUND: "Run `oum company list` to see your companies.",
-  COMPANY_ALREADY_EXISTS:
-    "Run `oum company show <registry-code>` to look at it.",
+  COMPANY_ALREADY_EXISTS: "Run `oum company list` to find its company id.",
 };
 
 export function mapError(error: unknown): CliError {

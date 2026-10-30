@@ -62,14 +62,31 @@ describe("addCompany", () => {
         actor: asUser(t.owner),
         name: "  Syncpoly    OÜ ",
         registryCode: " 1234-5678 ",
-        country: "ee",
+        country: "us",
         audit: t.auditContext,
       });
 
       expect(company).toMatchObject({
         name: "Syncpoly OÜ",
-        registryCode: "12345678",
-        country: "EE",
+        registryCode: "1234-5678",
+        country: "US",
+      });
+    });
+
+    it("creates a company without a registration number", async () => {
+      const t = setup();
+
+      const company = await t.run({
+        actor: asUser(t.owner),
+        name: "Community Learning Group",
+        country: "BR",
+        audit: t.auditContext,
+      });
+
+      expect(company).toMatchObject({
+        name: "Community Learning Group",
+        country: "BR",
+        registryCode: null,
       });
     });
 
@@ -127,19 +144,10 @@ describe("addCompany", () => {
         { country: "Estonia" },
         "INVALID_COUNTRY_CODE",
       ],
+      ["an unknown ISO country", { country: "ZZ" }, "INVALID_COUNTRY_CODE"],
       [
-        "a country we do not support yet",
-        { country: "LV" },
-        "UNSUPPORTED_COUNTRY",
-      ],
-      [
-        "a registry code that is too short",
-        { registryCode: "1234567" },
-        "INVALID_REGISTRY_CODE",
-      ],
-      [
-        "a registry code with a wrong check digit",
-        { registryCode: "12345679" },
+        "a blank supplied registration number",
+        { registryCode: "   " },
         "INVALID_REGISTRY_CODE",
       ],
       ["an empty name", { name: "   " }, "INVALID_NAME"],
@@ -182,6 +190,25 @@ describe("addCompany", () => {
         code: "COMPANY_ALREADY_EXISTS",
       });
       expect(t.companies.all()).toHaveLength(1);
+    });
+
+    it("allows multiple companies without registration numbers", async () => {
+      const t = setup();
+
+      await t.run({
+        actor: asUser(t.owner),
+        name: "First learning community",
+        country: "US",
+        audit: t.auditContext,
+      });
+      await t.run({
+        actor: asUser(t.owner),
+        name: "Second learning community",
+        country: "US",
+        audit: t.auditContext,
+      });
+
+      expect(t.companies.all()).toHaveLength(2);
     });
   });
 

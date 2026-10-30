@@ -2,7 +2,6 @@
 // Adapters (the CLI today, a web API tomorrow) translate these codes; they never parse messages.
 export type DomainErrorCode =
   | "INVALID_COUNTRY_CODE"
-  | "UNSUPPORTED_COUNTRY"
   | "INVALID_REGISTRY_CODE"
   | "INVALID_NAME"
   | "USER_NOT_FOUND"

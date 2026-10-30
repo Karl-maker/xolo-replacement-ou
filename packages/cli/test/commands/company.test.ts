@@ -6,7 +6,7 @@ import { aCompany, aUser, testDeps } from "../helpers.js";
 const me = aUser();
 
 describe("oum company add", () => {
-  it("sends name, registry code and the default country to core, as the signed-in user", async () => {
+  it("sends an optional registration number and the default country to core", async () => {
     const t = testDeps();
     t.core.companies.add.mockResolvedValue(aCompany());
 
@@ -36,8 +36,36 @@ describe("oum company add", () => {
         }),
       }),
     );
-    expect(t.stdout()).toContain("Added Syncpoly OÜ (EE 12345678).");
+    expect(t.stdout()).toContain("Added Syncpoly OÜ (EE, 12345678).");
     expect(t.stderr()).toBe("");
+  });
+
+  it("allows a company to be added without a registration number", async () => {
+    const t = testDeps();
+    t.core.companies.add.mockResolvedValue(
+      aCompany({
+        name: "Learning collective",
+        country: "US",
+        registryCode: null,
+      }),
+    );
+
+    expect(
+      await main(
+        ["company", "add", "--name", "Learning collective", "--country", "US"],
+        t.deps,
+      ),
+    ).toBe(0);
+    expect(t.core.companies.add).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Learning collective",
+        country: "US",
+      }),
+    );
+    expect(t.core.companies.add.mock.calls[0]?.[0]).not.toHaveProperty(
+      "registryCode",
+    );
+    expect(t.stdout()).toContain("Added Learning collective (US).");
   });
 
   it("understands the short flags -n, -r and -c", async () => {
@@ -116,7 +144,6 @@ describe("oum company add", () => {
 
   it.each([
     ["INVALID_REGISTRY_CODE", 2],
-    ["UNSUPPORTED_COUNTRY", 2],
     ["COMPANY_ALREADY_EXISTS", 5],
     ["FORBIDDEN", 4],
   ] as const)("turns core's %s into exit code %i", async (domainCode, exit) => {
@@ -194,7 +221,7 @@ describe("oum company list", () => {
       aCompany(),
       aCompany({
         name: "Old OÜ",
-        registryCode: "10422334",
+        registryCode: null,
         archivedAt: new Date(),
       }),
     ]);
@@ -202,7 +229,7 @@ describe("oum company list", () => {
     expect(await main(["company", "list"], t.deps)).toBe(0);
     expect(t.stdout()).toContain("NAME");
     expect(t.stdout()).toContain("Syncpoly OÜ");
-    expect(t.stdout()).toMatch(/Old OÜ\s+EE\s+10422334\s+archived/);
+    expect(t.stdout()).toMatch(/Old OÜ\s+EE\s+—\s+archived/);
   });
 
   it("explains what to do when there are no companies", async () => {
@@ -228,7 +255,7 @@ describe("oum company list", () => {
 });
 
 describe("oum company show", () => {
-  it("looks a company up by registry code, with the default country", async () => {
+  it("looks a company up by registration number, with the default country", async () => {
     const t = testDeps();
     t.core.companies.get.mockResolvedValue(aCompany());
 
@@ -238,7 +265,7 @@ describe("oum company show", () => {
       ref: "12345678",
       country: "EE",
     });
-    expect(t.stdout()).toContain("registry code:  12345678");
+    expect(t.stdout()).toContain("registration:  12345678");
   });
 
   it("exits 3 when the company is not found", async () => {

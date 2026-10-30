@@ -6,7 +6,6 @@ describe("ERROR_CATALOG", () => {
   it("defines a valid entry for every domain error code", () => {
     const codes: DomainErrorCode[] = [
       "INVALID_COUNTRY_CODE",
-      "UNSUPPORTED_COUNTRY",
       "INVALID_REGISTRY_CODE",
       "INVALID_NAME",
       "USER_NOT_FOUND",
@@ -25,7 +24,7 @@ describe("ERROR_CATALOG", () => {
 
   it("provides resolution guidance when defined", () => {
     expect(ERROR_CATALOG.INVALID_COUNTRY_CODE.resolution).toBe(
-      "Check the code and use a supported country code.",
+      "Check the code and use a valid ISO 3166-1 alpha-2 country code.",
     );
   });
 

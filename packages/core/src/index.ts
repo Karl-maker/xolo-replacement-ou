@@ -24,7 +24,7 @@ export {
 export type { Company, NewCompany } from "./domain/company/index.js";
 export type { User, NewUser } from "./domain/user/index.js";
 export {
-  SUPPORTED_COUNTRIES,
+  ISO_3166_1_ALPHA_2_CODES,
   parseCountryCode,
   type CountryCode,
 } from "./domain/country-code/index.js";

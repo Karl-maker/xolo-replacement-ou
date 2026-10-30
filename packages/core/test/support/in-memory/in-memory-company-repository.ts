@@ -30,6 +30,7 @@ export class InMemoryCompanyRepository implements CompanyRepository {
 
   async create(input: NewCompany, ownerId: string): Promise<Company> {
     if (
+      input.registryCode !== null &&
       this.rows.some(
         (c) =>
           c.country === input.country && c.registryCode === input.registryCode,

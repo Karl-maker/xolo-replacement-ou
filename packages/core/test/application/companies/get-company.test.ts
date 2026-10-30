@@ -25,11 +25,11 @@ describe("getCompany", () => {
       ).toEqual(t.company);
     });
 
-    it("by registry code, tolerating spaces and dashes", async () => {
+    it("by registration number", async () => {
       const t = setup();
 
       expect(
-        await t.run({ actor: asUser(t.me), ref: "1234-5678", country: "EE" }),
+        await t.run({ actor: asUser(t.me), ref: "12345678", country: "EE" }),
       ).toEqual(t.company);
     });
 
@@ -68,14 +68,14 @@ describe("getCompany", () => {
   describe("when the reference is malformed", () => {
     it.each([
       [
-        "a registry code with a wrong check digit",
-        { ref: "12345679", country: "EE" },
+        "a blank registration number",
+        { ref: "   ", country: "EE" },
         "INVALID_REGISTRY_CODE",
       ],
       [
-        "an unsupported country",
-        { ref: "12345678", country: "LV" },
-        "UNSUPPORTED_COUNTRY",
+        "an invalid country",
+        { ref: "12345678", country: "ZZ" },
+        "INVALID_COUNTRY_CODE",
       ],
     ] as const)("rejects %s before searching", async (_label, input, code) => {
       const t = setup();
